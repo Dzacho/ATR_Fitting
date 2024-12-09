@@ -16,12 +16,12 @@ import multiprocessing as mp
 # "1.2 / degree" is 1.2 radians expressed in degrees
 degree = pi/180
 
-# wavelength in nm
+# wavelength of your ATR laser in nm
 lam_vac = 632.8
 
 output = False
 form = 'pdf'
-mode = 'n'
+mode = 'eps'
 
 # Normalization data loading using the sample 100 % intensity file:
 norm_path = 'path to data representing 100 % intensity on the detector'
@@ -86,15 +86,13 @@ class Sample:
         
     def SPR(self, theta_list, d1, n1r, n1i, d2, n2r, n2i, scale):
         # EMA - Bruggeman's model
-        '''
         eps_1_eff = (n1r + 1j*n1i)**2
         H_b = 0.5 * (eps_1_eff + 1)
         eps_r_eff = (H_b - np.sqrt(H_b**2 + 8 * eps_1_eff))/4
         n_eff = np.sqrt(eps_r_eff)
-        '''
         
-        d = array([inf, self.substrate_thickness, d1, d2, inf])
-        n = array([self.n_prism, self.n_substrate, n1r + 1j*n1i, n2r + 1j*n2i, 1])
+        d = array([inf, self.substrate_thickness, d1, d_r, inf])
+        n = array([self.n_prism, self.n_substrate, n1r + 1j*n1i, n_eff, 1])
         result = np.empty(len(theta_list))
         for i in range(theta_list.size):
             result[i] = scale * coh_tmm('p', n, d, theta_list[i], lam_vac)['R']
@@ -103,15 +101,14 @@ class Sample:
     def EPSPR(self, theta_list, d1, eps1r, eps1i, d2, eps2r, eps2i, scale):
         # EMA - Bruggeman's model
         eps_1_eff = eps1r + 1j*eps1i
-        '''H_b = 0.5 * (eps_1_eff + 1)
+        H_b = 0.5 * (eps_1_eff + 1)
         eps_r_eff = (H_b - np.sqrt(H_b**2 + 8 * eps_1_eff))/4
-        '''
-        n1 = np.sqrt(eps_1_eff)
-        #n_eff = np.sqrt(eps_r_eff)
-        n2 = np.sqrt(eps2r + 1j*eps2i)
         
-        d = array([inf, self.substrate_thickness, d1, d2, inf])
-        n = array([self.n_prism, self.n_substrate, n1, n2, 1])
+        n = np.sqrt(eps_1_eff)
+        n_eff = np.sqrt(eps_r_eff)
+        
+        d = array([inf, self.substrate_thickness, d1, d_r, inf])
+        n = array([self.n_prism, self.n_substrate, n, n_eff, 1])
         result = np.empty(len(theta_list))
         for i in range(theta_list.size):
             result[i] = scale * coh_tmm('p', n, d, theta_list[i], lam_vac)['R']
@@ -131,17 +128,15 @@ class Sample:
         ax.set_title(self.sample_name)
     
 # Estimated thickness [nm] and refractive indices of the layer
-d1 = 50
-d2 = 3 # Roughness height (for EMA)
-n1 = 0.056253+4.276j
-n2 = 1.7688+4.2890j
+d = 50
+d_r = 3 # Roughness height (for EMA)
+n = 0.056253+4.276j
 scale = 1
 if mode == 'eps':
-    eps1 = n1**2
-    eps2 = n2**2
-    general_init_guess = [d1, eps1.real, eps1.imag, d2, eps2.real, eps2.imag, scale]
+    eps = n**2
+    general_init_guess = [d, eps.real, eps.imag, d_r, scale]
 else:
-    general_init_guess = [d1, n1.real, n1.imag, d2, n2.real, n2.imag, scale]
+    general_init_guess = [d, n.real, n.imag, d_r, scale]
 
 # Write here the path where you want the fit parameters to be stored.
 fitpars_path = '.../fitpars_batch.txt'
@@ -149,9 +144,9 @@ fitpars_path = '.../fitpars_batch.txt'
 # Description
 header = "Value +- std deviation"
 if mode == 'eps':
-    variables = 'd1, \pm, e1r, \pm, e1i, \pm, d2, \pm, e2r, \pm, e2i, \pm, scale, \pm, rmse, mae'
+    variables = 'd, \pm, e1, \pm, e2, \pm, d_r, \pm, scale, \pm, rmse, mae'
 else:
-    variables = 'd1, \pm, n1, \pm, k1, \pm, d2, \pm, n2, \pm, k2, \pm, scale, \pm, rmse, mae'
+    variables = 'd, \pm, n, \pm, k, \pm, d_r, \pm, scale, \pm, rmse, mae'
     
 # Used glass n + jk at 632.8 nm:
 BK7 = 1.5151
