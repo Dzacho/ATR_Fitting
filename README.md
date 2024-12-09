@@ -9,4 +9,4 @@ Currently I'm thinking about simplifying the process of adding/removing layers, 
 
 Requires tmm, numpy, matplotlib, scipy and multiprocessing packages (the latter not necessary, you can modify it to use only one processing thread, it was added just for us impatient with a lot of samples and processor cores).
 
-You are free to use and modify it, which would probably be neccessary to fit your needs and data formats. Don't hesitate to contact me if you needed help with any setting or modification of the script. I didn't care about creating a universal tool, I created tool for me and my use case.
+You are free to use and modify it, which would probably be neccessary to fit your needs and data formats. Don't hesitate to contact me on mail lisjachy@cvut.cz or jachymlis@outlook.cz if you needed help with any setting or modification of the script. I didn't care about creating a universal tool, I created tool for me and my use case.
