@@ -1,10 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Created on Fri Apr  5 10:28:11 2024
-
-@author: Jachym
-"""
 
 from __future__ import division, print_function, absolute_import
 
@@ -28,8 +23,8 @@ output = False
 form = 'pdf'
 mode = 'n'
 
-# Normalization data loading:
-norm_path = '/home/Jachym/Dokumenty/Škola/FJFI/Magistr/Výzkumný úkol/Data/ATR/20240529-1627 100% intensity.dat'
+# Normalization data loading using the sample 100 % intensity file:
+norm_path = 'path to data representing 100 % intensity on the detector'
 norm = np.loadtxt(norm_path, delimiter=' ', skiprows=1)
 peak_start_index = 18
 peak_end_index = 22
@@ -148,6 +143,9 @@ if mode == 'eps':
 else:
     general_init_guess = [d1, n1.real, n1.imag, d2, n2.real, n2.imag, scale]
 
+# Write here the path where you want the fit parameters to be stored.
+fitpars_path = '.../fitpars_batch.txt'
+
 # Description
 header = "Value +- std deviation"
 if mode == 'eps':
@@ -163,12 +161,14 @@ KIPL_A = 1.511980 - 1e-6j
 KIPL_B = 1.499575 + 2e-6j
 #KIPL_C = 1.542548 + 0.001275j
 
-#MS Samples:
+#Samples list:
 samples = [
-    Sample('/home/Jachym/Dokumenty/Škola/FJFI/Magistr/Diplomka/Data/ATR/MS/20241128-1609.dat', 'AgPd2448', BK7, 90, fused_silica, 0.5e6, [65.26, 0.11984, 4.31777, 3.11, 1.91787, 3.64897, scale], True)
+    Sample('path to measurement data #1', 'sample name', BK7, 90, fused_silica, 0.5e6, [65.26, 0.11984, 4.31777, 3.11, 1.91787, 3.64897, scale], True),
+    Sample('path to measurement data #2', 'sample name', BK7, 90, fused_silica, 0.5e6, [65.26, 0.11984, 4.31777, 3.11, 1.91787, 3.64897, scale], True)
     ]
 Results = 'name, ' + str(variables) + '\n'
 
+#multiprocessing of samples:
 def process_sample(sample):
     if sample.enable:
         sample.process()
@@ -177,16 +177,18 @@ def process_sample(sample):
     return sample
 
 if __name__ == '__main__':
-    pool = mp.Pool(processes = 8)
+    pool = mp.Pool(processes = 8) #change the number of processes you want to let the script use
     samples = pool.map(process_sample, samples)
     pool.close()
     pool.join()
+
+#If you don't want to use multiprocessing, use just a iteration loop over the list of samples and the command 'sample.process()'
 
 for Sample in samples:
     if Sample.enable:
         Sample.plot(plot_Err=not(output))
         if output:
-            Sample.fig.savefig('/home/Jachym/Dokumenty/Škola/FJFI/Magistr/Výzkumný úkol/Data/ATR/MS/%s_batch.%s' %(Sample.sample_name, form), format=form)
+            Sample.fig.savefig('path to where you want to store your plots/%s_batch.%s' %(Sample.sample_name, form), format=form)
         else:
             plt.figure(Sample.fig.number)
             plt.show()
